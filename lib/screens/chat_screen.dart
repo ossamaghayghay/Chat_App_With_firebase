@@ -5,6 +5,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import '/constants.dart';
 import 'package:intl/intl.dart';
+
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
   
@@ -21,7 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
   TextEditingController controller=TextEditingController();
   final firestore=FirebaseFirestore.instance;
   final auth=FirebaseAuth.instance;
-  var loggedUser;
+  var loggedUser=FirebaseAuth.instance.currentUser;
   
   @override
   void initState() {
@@ -46,7 +48,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void sendMessage(){
    firestore.collection('messages').add({
     'message':message,
-    'date':DateTime.now(),
+    // 'date':DateTime.now(),
+    'userId':loggedUser!.email,
    });
    controller.clear();
 
@@ -82,7 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
       
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             StreamBuilder(
@@ -99,14 +102,20 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                   );
                   }
-                      final msg=snapshot.data.docs;
+                      final msg=snapshot.data.docs.reversed;
                       List<MessageBubble> msgListBubbles=[];
-                      for(var messgae in msg)
+                      for(var message in msg)
                       {
-                        final messageText=messgae['message'];
-                        // final messageDate=messgae['date'];
-
-                        final msgbubble=MessageBubble(message: messageText);
+                        final messageText=message['message'];
+                        final email=message['userId'];
+                        final isMe=message['userId']==loggedUser!.email;
+                        
+                        final msgbubble=MessageBubble(
+                          message: messageText,
+                          isMe: isMe,
+                          email:email,
+                          );
+      
                         msgListBubbles.add(msgbubble);
                       }
                       return Expanded(
@@ -126,7 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: controller,
-
+      
                       onChanged: (value) {
                         message=value;
                       },
@@ -152,32 +161,54 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
 class MessageBubble extends StatelessWidget {
-  const MessageBubble({ Key? key ,required this.message}) : super(key: key);
+  const MessageBubble({ Key? key ,required this.message,required this.isMe,required this.email}) : super(key: key);
   final String message;
+  final bool isMe;
+  final String email;
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(DateFormat.Hm().format(DateTime.now())),
-          Material(
-            borderRadius: BorderRadius.circular(30),
-            color: Colors.greenAccent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 20),
-              child: Text(
-                 message,
-                 style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold
-                  ),
+      padding: const EdgeInsets.all(7.0),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: !isMe? CrossAxisAlignment.start:CrossAxisAlignment.end,
+          children: [
+            Text(DateFormat.Hm().format(DateTime.now())),
+            Material(
+              borderRadius:  BorderRadius.only(
+                topLeft:!isMe?const Radius.circular(0.0):const Radius.circular(30.0),
+                bottomLeft: const Radius.circular(30.0),
+                bottomRight: const Radius.circular(30.0),
+                topRight: !isMe?const Radius.circular(30.0):const Radius.circular(0.0)
+              ),
+              color: isMe?Colors.greenAccent:Colors.white,
+              elevation: 5.0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 20),
+                child: Column(
+                  children: [
+                     Text(
+                       email,
+                       style: const TextStyle(
+                        fontSize: 10,
+                        color: Color.fromARGB(255, 107, 105, 105),
+                        fontWeight: FontWeight.bold
+                        ),
+                      ),
+                    Text(
+                       message,
+                       style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold
+                        ),
+                      ),
+                  ],
                 ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

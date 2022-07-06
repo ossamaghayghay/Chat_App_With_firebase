@@ -27,14 +27,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   }
   /*::::::::::::::::::::Cretae Collectio  Of Messaging::::::::*/
-  Future<void> createCollection()async{
-    return messages.add({
-      'message':'',
-      'date':DateTime.now(),
-    }).then((value) => print('collection has been Create Successfully!'))
-    .catchError((onError)=>print('Failed to add user: $onError'));
+  // Future<void> createCollection()async{
+  //   return messages.add({
+  //     'message':,
+  //     'date':DateTime.now(),
+  //   }).then((value) => print('collection has been Create Successfully!'))
+  //   .catchError((onError)=>print('Failed to add user: $onError'));
 
-  }
+  // }
 
   bool showspinner=false;
   final auth=FirebaseAuth.instance;
@@ -101,7 +101,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         showspinner=false;
                       });
                       addUser();
-                      createCollection();
+                      // createCollection();
                     }catch(e){
                         print(e);
                     }
